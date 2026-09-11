@@ -1,9 +1,0 @@
-{
-  "lecture":  { "labelAr": "محاضرة",      "labelEn": "Lecture",  "color": "#0d9488", "isCoreByDefault": true },
-  "lab":      { "labelAr": "معمل",        "labelEn": "Lab",      "color": "#2563eb", "isCoreByDefault": false },
-  "tutorial": { "labelAr": "تمارين",      "labelEn": "Tutorial", "color": "#7c3aed", "isCoreByDefault": false },
-  "quiz":     { "labelAr": "اختبار قصير", "labelEn": "Quiz",     "color": "#d97706", "isAssessment": true },
-  "exam":     { "labelAr": "اختبار",      "labelEn": "Exam",     "color": "#dc2626", "isAssessment": true },
-  "break":    { "labelAr": "استراحة",     "labelEn": "Break",    "isBreak": true },
-  "other":    { "labelAr": "نشاط",        "labelEn": "Activity", "color": "#64748b" }
-}
