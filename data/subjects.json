@@ -1,0 +1,72 @@
+[
+  {
+    "id": "math-1311",
+    "nameAr": "التفاضل والتكامل 1",
+    "nameEn": "Calculus I",
+    "department": "mathematics",
+    "year": 1,
+    "semester": 1,
+    "code": "1311 MATH-3",
+    "assessments": [
+      {
+        "id": "activities",
+        "labelAr": "الأنشطة والتقييم المستمر",
+        "labelEn": "Activities & In-course Assessment",
+        "weight": 30
+      },
+      {
+        "id": "partial",
+        "labelAr": "الاختبار الجزئي",
+        "labelEn": "Partial Exam",
+        "weight": 30
+      },
+      {
+        "id": "final",
+        "labelAr": "الاختبار النهائي",
+        "labelEn": "Final Exam",
+        "weight": 40
+      }
+    ]
+  },
+  {
+    "id": "chem-1413",
+    "nameAr": "الكيمياء العامة",
+    "nameEn": "General Chemistry",
+    "department": "chemistry",
+    "year": 1,
+    "semester": 1,
+    "code": "1413 Chem.-4",
+    "assessments": [
+      {
+        "id": "quiz",
+        "labelAr": "اختبار قصير",
+        "labelEn": "Quiz",
+        "weight": 5
+      },
+      {
+        "id": "homework",
+        "labelAr": "واجب",
+        "labelEn": "Homework",
+        "weight": 5
+      },
+      {
+        "id": "midterm",
+        "labelAr": "الاختبار النصفي",
+        "labelEn": "Midterm Exam",
+        "weight": 25
+      },
+      {
+        "id": "practical",
+        "labelAr": "الاختبار العملي",
+        "labelEn": "Practical Exam",
+        "weight": 25
+      },
+      {
+        "id": "final",
+        "labelAr": "الاختبار النهائي",
+        "labelEn": "Final Exam",
+        "weight": 40
+      }
+    ]
+  }
+]

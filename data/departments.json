@@ -1,0 +1,4 @@
+{
+  "mathematics": { "nameAr": "الرياضيات", "nameEn": "Mathematics", "color": "#0f766e" },
+  "chemistry":   { "nameAr": "الكيمياء",  "nameEn": "Chemistry",   "color": "#9333ea" }
+}
