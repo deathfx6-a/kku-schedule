@@ -1,0 +1,26 @@
+{
+  "nameAr": "جامعة الملك خالد",
+  "nameEn": "King Khalid University",
+  "shortName": "KKU",
+  "siteTitleAr": "جدولي",
+  "siteTitleEn": "My Schedule",
+  "facultyAr": "السنة التحضيرية",
+  "facultyEn": "Preparatory Year",
+  "academicYearAr": "العام الجامعي 1448 / 1449هـ",
+  "academicYearEn": "Academic year 1448 / 1449 AH",
+  "disclaimerAr": "هذا الموقع غير رسمي ولأغراض تنظيمية شخصية فقط. عند أي تعارض يُعتمد الجدول الرسمي الصادر من الكلية.",
+  "disclaimerEn": "This website is unofficial and intended for personal organizational use only. In case of any discrepancy, the official timetable issued by the college prevails.",
+  "footerNoteAr": "غير رسمي — لأغراض تنظيمية شخصية فقط",
+  "footerNoteEn": "Unofficial — for personal organizational use only",
+  "showHijriDates": true,
+  "designerAr": "تصميم وتطوير: محمد الحلومي",
+  "designerEn": "Designed & developed by Mohammed Alholomi",
+  "designerInstagram": "ENG.FX6",
+  "workDays": [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday"
+  ]
+}
