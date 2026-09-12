@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="KKU Schedule — جدول أسبوعي شخصي لطلاب جامعة الملك خالد">
+  <title>جدولي | KKU</title>
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+
+  <!-- Applies the saved theme and language before first paint (prevents a flash).
+       Keys must match CONFIG.storageKeys in assets/app.js. -->
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
+        var theme = localStorage.getItem("kkuTheme");
+        var dark = theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.setAttribute("data-theme", dark ? "dark" : "light");
+        if (localStorage.getItem("kkuLanguage") === "en") { root.lang = "en"; root.dir = "ltr"; }
+      } catch (e) { /* storage unavailable: defaults stay */ }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300..700&display=swap">
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="skipLink">تخطَّ إلى المحتوى</a>
+
+  <!-- ================= Header ================= -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-mark" id="brandMark" aria-hidden="true">KKU</span>
+        <div class="brand-text">
+          <strong class="brand-title" id="siteTitle">جدولي</strong>
+          <span class="brand-sub" id="siteSub"></span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" class="btn btn-quiet" id="changeSelectionBtn" data-i18n-aria="changeSelection" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>
+          <span class="btn-label" data-i18n="changeSelection">تغيير الاختيار</span>
+        </button>
+        <button type="button" class="icon-btn" id="themeToggle" aria-pressed="false">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button type="button" class="icon-btn lang-btn" id="langToggle">EN</button>
+      </div>
+    </div>
+    <div class="qatt" aria-hidden="true"></div>
+  </header>
+
+  <main id="main" class="container" tabindex="-1">
+
+    <!-- ================= Loading ================= -->
+    <section class="screen" id="loadingScreen" aria-live="polite">
+      <div class="state-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p data-i18n="loading">جارٍ تحميل البيانات…</p>
+      </div>
+    </section>
+
+    <!-- ================= Error ================= -->
+    <section class="screen" id="errorScreen" hidden>
+      <div class="state-card state-error" role="alert">
+        <div class="state-icon" aria-hidden="true">!</div>
+        <h1 data-i18n="errorTitle">تعذر التحميل</h1>
+        <p id="errorMessage"></p>
+        <p class="error-hint" id="errorHint" hidden></p>
+        <pre class="error-detail" id="errorDetail" dir="ltr" hidden></pre>
+        <div class="state-actions">
+          <button type="button" class="btn btn-primary" id="retryBtn" data-i18n="retry">إعادة المحاولة</button>
+          <button type="button" class="btn" id="errorChangeBtn" data-i18n="changeSelection" hidden>تغيير الاختيار</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Selection: year → program → group ================= -->
+    <section class="screen" id="selectionScreen" hidden>
+      <div class="hero">
+        <p class="hero-year" id="heroYear" hidden></p>
+        <h1 data-i18n="heroTitle">اختر سنتك الدراسية</h1>
+        <p data-i18n="heroSub"></p>
+        <ol class="stepper" id="stepper">
+          <li data-step="years" data-i18n="stepYear">السنة</li>
+          <li data-step="programs" data-i18n="stepProgram">التخصص</li>
+          <li data-step="groups" data-i18n="stepGroup">المجموعة</li>
+        </ol>
+      </div>
+
+      <div class="step" id="yearStep">
+        <div class="choice-grid" id="yearGrid"></div>
+        <p class="empty-note" id="yearEmpty" data-i18n="noYears" hidden></p>
+      </div>
+
+      <div class="step" id="programStep" hidden>
+        <div class="step-head">
+          <button type="button" class="btn" id="backFromPrograms">
+            <svg class="icon flip-rtl" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            <span data-i18n="back">رجوع</span>
+          </button>
+          <div>
+            <h2 data-i18n="pickProgram">اختر تخصصك</h2>
+            <p id="programStepSub"></p>
+          </div>
+        </div>
+        <div class="choice-grid" id="programGrid"></div>
+      </div>
+
+      <div class="step" id="groupStep" hidden>
+        <div class="step-head">
+          <button type="button" class="btn" id="backFromGroups">
+            <svg class="icon flip-rtl" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            <span data-i18n="back">رجوع</span>
+          </button>
+          <div>
+            <h2 data-i18n="pickGroup">اختر مجموعتك</h2>
+            <p id="groupStepSub"></p>
+          </div>
+        </div>
+        <div class="choice-grid choice-grid-compact" id="groupGrid"></div>
+        <p class="empty-note" id="groupEmpty" data-i18n="noGroups" hidden></p>
+      </div>
+    </section>
+
+    <!-- ================= Overview (year without a detailed schedule) ================= -->
+    <section class="screen" id="overviewScreen" hidden>
+      <div class="page-head">
+        <button type="button" class="btn" id="overviewBack">
+          <svg class="icon flip-rtl" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+          <span data-i18n="back">رجوع</span>
+        </button>
+        <div class="page-head-copy">
+          <h1 id="overviewTitle"></h1>
+          <p id="overviewDesc"></p>
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong data-i18n="noScheduleTitle"></strong>
+        <span data-i18n="noScheduleSub"></span>
+      </div>
+
+      <div class="overview-grid">
+        <section class="panel" aria-labelledby="overviewProgramsHeading">
+          <h2 class="panel-title" id="overviewProgramsHeading" data-i18n="programsTitle"></h2>
+          <ul class="program-list" id="overviewPrograms"></ul>
+          <p class="empty-note" id="overviewProgramsEmpty" data-i18n="noPrograms" hidden></p>
+        </section>
+        <section class="panel" id="overviewSubjectsSection" aria-labelledby="overviewSubjectsHeading">
+          <h2 class="panel-title" id="overviewSubjectsHeading" data-i18n="subjectsTitle"></h2>
+          <div id="overviewSubjects"></div>
+        </section>
+      </div>
+
+      <section class="panel panel-spaced" aria-labelledby="overviewCalendarHeading">
+        <h2 class="panel-title" id="overviewCalendarHeading" data-i18n="calendarTitle"></h2>
+        <div class="calendar-cards calendar-cards-wide" id="overviewCalendar"></div>
+      </section>
+    </section>
+
+    <!-- ================= Schedule ================= -->
+    <section class="screen" id="scheduleScreen" hidden>
+      <div class="page-head">
+        <button type="button" class="btn" id="scheduleBack">
+          <svg class="icon flip-rtl" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+          <span data-i18n="back">رجوع</span>
+        </button>
+        <div class="page-head-copy">
+          <p class="kicker" data-i18n="scheduleFor">جدولك</p>
+          <h1 id="scheduleTitle"></h1>
+          <div class="chips" id="scheduleMeta"></div>
+        </div>
+      </div>
+
+      <!-- Up next: the lecture happening now, or the next one (refreshes every minute) -->
+      <!-- Now / free gap / next — refreshed every minute -->
+      <section class="up-next" id="upNext" aria-live="polite" hidden>
+        <div class="up-cards">
+          <article class="up-card is-now" id="upNowCard" hidden>
+            <p class="up-card-label"><span class="up-dot" aria-hidden="true"></span><span data-i18n="upNowLabel"></span></p>
+            <strong class="up-card-title" id="upNowTitle"></strong>
+            <p class="up-card-when" id="upNowWhen"></p>
+            <p class="up-card-meta" id="upNowMeta"></p>
+          </article>
+
+          <article class="up-card is-free" id="upFreeCard" hidden>
+            <p class="up-card-label"><span class="up-dot" aria-hidden="true"></span><span data-i18n="freeLabel"></span></p>
+            <strong class="up-card-title" id="upFreeTitle"></strong>
+            <p class="up-card-when" id="upFreeRange"></p>
+          </article>
+
+          <article class="up-card is-next" id="upNextCard" hidden>
+            <p class="up-card-label"><span class="up-dot" aria-hidden="true"></span><span data-i18n="upNextLabel"></span></p>
+            <strong class="up-card-title" id="upNextTitle"></strong>
+            <p class="up-card-when" id="upNextWhen"></p>
+            <p class="up-card-meta" id="upNextMeta"></p>
+          </article>
+        </div>
+        <button type="button" class="btn up-next-ics" id="icsBtn">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>
+          <span data-i18n="addToCalendar">أضفه لتقويم جوالك</span>
+        </button>
+      </section>
+
+      <!-- Backlog summary: only lectures whose time has passed count here -->
+      <section class="backlog-summary" id="backlogSummary" data-level="clear" aria-labelledby="backlogHeading">
+        <div class="backlog-icon" id="backlogIcon" aria-hidden="true">✓</div>
+        <div class="backlog-copy">
+          <h2 class="backlog-title" id="backlogHeading" data-i18n="backlogTitle">إجمالي المتراكم</h2>
+          <div class="backlog-headline" aria-live="polite">
+            <p class="backlog-count"><span id="backlogNumber">0</span> <small id="backlogUnit"></small></p>
+            <span class="level-pill" id="backlogLevel"></span>
+          </div>
+          <p class="backlog-message" id="backlogMessage"></p>
+          <p class="backlog-detail" id="backlogDetail"></p>
+          <dl class="stat-row">
+            <div class="stat"><dt data-i18n="statTotal"></dt><dd id="statTotal">0</dd></div>
+            <div class="stat"><dt data-i18n="statDue"></dt><dd id="statDue">0</dd></div>
+            <div class="stat"><dt data-i18n="statCompleted"></dt><dd id="statCompleted">0</dd></div>
+            <div class="stat"><dt data-i18n="statRemaining"></dt><dd id="statRemaining">0</dd></div>
+          </dl>
+        </div>
+        <div class="pace-ring" id="paceRing" role="img">
+          <div class="pace-inner">
+            <strong id="paceValue">100%</strong>
+            <small data-i18n="paceLabel">نسبة المواكبة</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customize: personal edits saved in this browser (never in the JSON files) -->
+      <section class="customize-bar" id="customizeBar" aria-labelledby="customizeHeading">
+        <div class="customize-copy">
+          <h2 class="customize-title" id="customizeHeading" data-i18n="customizeTitle">تخصيص الجدول</h2>
+          <p class="customize-status" id="customizeStatus"></p>
+        </div>
+        <div class="customize-actions">
+          <button type="button" class="btn" id="editModeBtn" aria-pressed="false">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>
+            <span id="editModeLabel">وضع التعديل</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="addSlotBtn">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span data-i18n="addSlot">إضافة موعد</span>
+          </button>
+          <details class="more-menu" id="moreMenu">
+            <summary class="btn" data-i18n-aria="moreActions">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+              <span data-i18n="more">المزيد</span>
+            </summary>
+            <div class="more-menu-list">
+              <button type="button" class="more-item" id="exportCustomBtn">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+                <span data-i18n="exportBackup">تصدير نسخة</span>
+              </button>
+              <button type="button" class="more-item" id="importCustomBtn">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>
+                <span data-i18n="importBackup">استيراد نسخة</span>
+              </button>
+              <button type="button" class="more-item more-item-danger" id="resetCustomBtn">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/></svg>
+                <span data-i18n="resetCustom">استعادة الجدول الأصلي</span>
+              </button>
+            </div>
+          </details>
+          <input type="file" id="importCustomInput" accept="application/json,.json" hidden>
+        </div>
+      </section>
+
+      <div class="schedule-layout">
+        <div class="schedule-main">
+          <div class="week-strip">
+            <button type="button" class="today-btn" id="todayBtn" data-i18n-aria="jumpToToday">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/></svg>
+              <span data-i18n="today">اليوم</span>
+            </button>
+            <nav class="week-tabs" id="weekTabs" role="tablist" data-i18n-aria="weeksNav"></nav>
+          </div>
+
+          <p class="empty-note" id="noWeeks" data-i18n="noWeeks" hidden></p>
+
+          <section class="week-panel" id="weekPanel" role="tabpanel" aria-labelledby="weekTitle">
+            <div class="week-info">
+              <h2 class="week-title"><span id="weekTitle"></span><span class="week-theme" id="weekTheme"></span></h2>
+              <p class="week-range"><span id="weekRange"></span><span class="week-hijri" id="weekHijri"></span></p>
+            </div>
+            <div class="week-progress-card">
+              <div class="week-progress" id="weekProgress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="progress-text" id="weekProgressText"></span>
+                <span class="progress-track"><span class="progress-fill" id="weekProgressFill"></span></span>
+              </div>
+              <p class="week-progress-empty" id="weekProgressEmpty" data-i18n="noCoreThisWeek" hidden></p>
+            </div>
+            <div class="day-grid" id="weekDays"></div>
+          </section>
+        </div>
+
+        <aside class="schedule-aside">
+          <section class="panel" aria-labelledby="dashboardHeading">
+            <div class="panel-head">
+              <h2 class="panel-title" id="dashboardHeading" data-i18n="dashboardTitle">إنجاز المواد</h2>
+              <p data-i18n="dashboardSub"></p>
+            </div>
+            <div class="subject-list" id="subjectList"></div>
+            <p class="empty-note" id="subjectEmpty" data-i18n="noSubjects" hidden></p>
+          </section>
+
+          <section class="panel" aria-labelledby="calendarHeading">
+            <h2 class="panel-title" id="calendarHeading" data-i18n="calendarTitle">التقويم الأكاديمي</h2>
+            <div class="calendar-cards" id="scheduleCalendar"></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= Footer ================= -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="disclaimer" id="disclaimer" hidden></p>
+      <p class="footer-note"><span id="footerNote"></span> <span id="footerYear"></span></p>
+      <p class="credit-line" id="creditLine" hidden>
+        <span id="creditText"></span>
+        <a id="creditInstagram" href="#" target="_blank" rel="noopener noreferrer" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+          <span data-f="handle"></span>
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- ================= Slot editor ================= -->
+  <dialog class="editor" id="slotEditor" aria-labelledby="editorTitle">
+    <form class="editor-form" id="slotForm" novalidate>
+      <header class="editor-head">
+        <h2 id="editorTitle"></h2>
+        <button type="button" class="icon-btn" id="editorClose" data-i18n-aria="close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="editor-body">
+        <div class="field">
+          <label for="fSubject" data-i18n="fSubject"></label>
+          <select id="fSubject"></select>
+        </div>
+
+        <div class="field-row" id="newSubjectFields" hidden>
+          <div class="field">
+            <label for="fNewSubjectName" data-i18n="fNewSubjectName"></label>
+            <input type="text" id="fNewSubjectName" maxlength="80" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="fDepartment" data-i18n="fDepartment"></label>
+            <select id="fDepartment"></select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fType" data-i18n="fType"></label>
+            <select id="fType"></select>
+          </div>
+          <div class="field">
+            <label for="fTitle" data-i18n="fTitle"></label>
+            <input type="text" id="fTitle" maxlength="120" autocomplete="off" data-i18n-placeholder="fTitlePh">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="fInstructor" data-i18n="fInstructor"></label>
+            <input type="text" id="fInstructor" maxlength="80" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="fRoom" data-i18n="fRoom"></label>
+            <input type="text" id="fRoom" maxlength="40" autocomplete="off" dir="auto">
+          </div>
+        </div>
+
+        <div class="field-row field-row-3">
+          <div class="field">
+            <label for="fDay" data-i18n="fDay"></label>
+            <select id="fDay"></select>
+          </div>
+          <div class="field">
+            <label for="fStart" data-i18n="fStart"></label>
+            <input type="time" id="fStart" step="300" required>
+          </div>
+          <div class="field">
+            <label for="fEnd" data-i18n="fEnd"></label>
+            <input type="time" id="fEnd" step="300" required>
+          </div>
+        </div>
+
+        <label class="toggle">
+          <input type="checkbox" id="fCore">
+          <span data-i18n="fCore"></span>
+        </label>
+
+        <fieldset class="weeks-field">
+          <legend data-i18n="fWeeks"></legend>
+          <p class="field-hint" id="fWeeksHint"></p>
+          <div class="week-picks" id="fWeeks"></div>
+          <button type="button" class="link-btn" id="fAllWeeks" data-i18n="fAllWeeks"></button>
+        </fieldset>
+
+        <p class="form-error" id="editorError" role="alert" hidden></p>
+      </div>
+
+      <footer class="editor-foot">
+        <button type="button" class="btn btn-quiet-danger" id="editorDelete" data-i18n="deleteSlot"></button>
+        <button type="button" class="btn" id="editorRestore" data-i18n="restoreOriginal"></button>
+        <span class="editor-spacer"></span>
+        <button type="button" class="btn" id="editorCancel" data-i18n="cancel"></button>
+        <button type="submit" class="btn btn-primary" data-i18n="save"></button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ================= Grades ================= -->
+  <dialog class="editor" id="gradesEditor" aria-labelledby="gradesTitle">
+    <div class="editor-form">
+      <header class="editor-head">
+        <h2 id="gradesTitle"></h2>
+        <button type="button" class="icon-btn" id="gradesClose" data-i18n-aria="close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="editor-body">
+        <p class="empty-note" id="gradesEmpty" data-i18n="gradesEmpty" hidden></p>
+        <div id="gradesRows"></div>
+
+        <div class="grades-summary" id="gradesSummary" hidden>
+          <div class="grades-summary-main">
+            <strong id="gradesAchievedValue">0%</strong>
+            <span data-i18n="gradesAchieved"></span>
+            <span class="grades-summary-sub" id="gradesEnteredOf"></span>
+          </div>
+          <div class="field grades-target-field">
+            <label for="gradesTarget" data-i18n="gradesTarget"></label>
+            <select id="gradesTarget">
+              <option value="60">60%</option>
+              <option value="65">65%</option>
+              <option value="70">70%</option>
+              <option value="75">75%</option>
+              <option value="80" selected>80%</option>
+              <option value="85">85%</option>
+              <option value="90">90%</option>
+              <option value="95">95%</option>
+            </select>
+          </div>
+          <p id="gradesTargetMessage"></p>
+        </div>
+        <p class="field-hint" data-i18n="gradesNote"></p>
+      </div>
+    </div>
+  </dialog>
+
+  <template id="tpl-grade-row">
+    <div class="grade-row">
+      <div class="grade-row-copy">
+        <span class="grade-row-label" data-f="label"></span>
+        <span class="grade-row-weight" data-f="weight"></span>
+      </div>
+      <div class="field grade-row-input">
+        <label data-f="scoreLabel"></label>
+        <input type="number" inputmode="decimal" min="0" step="0.25">
+      </div>
+    </div>
+  </template>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- =========================================================
+       Templates — markup lives here, app.js only clones them
+       and fills text with textContent (never innerHTML).
+       ========================================================= -->
+
+  <template id="tpl-choice-card">
+    <button type="button" class="choice-card">
+      <span class="choice-num" data-f="num"></span>
+      <span class="choice-title" data-f="title"></span>
+      <span class="choice-desc" data-f="desc"></span>
+      <span class="choice-badge" data-f="badge"></span>
+    </button>
+  </template>
+
+  <template id="tpl-week-tab">
+    <button type="button" class="week-tab" role="tab" aria-controls="weekPanel">
+      <span class="week-tab-label" data-f="label"></span>
+      <svg class="week-tab-done" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>
+    </button>
+  </template>
+
+  <template id="tpl-day-card">
+    <article class="day-card">
+      <header class="day-head">
+        <h3 class="day-name" data-f="name"></h3>
+        <span class="today-pill" data-f="today" data-i18n="today" hidden></span>
+        <span class="holiday-pill" data-f="holiday" hidden></span>
+        <span class="day-dates">
+          <span class="day-date" data-f="date"></span>
+          <span class="day-hijri" data-f="hijri"></span>
+        </span>
+        <button type="button" class="day-btn day-check-all" data-f="checkAll" hidden>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12.5l4 4 8-9M10 16.5l1 1 9-10"/></svg>
+        </button>
+        <button type="button" class="day-btn day-add" data-f="add">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </header>
+      <ul class="slot-list" data-f="slots"></ul>
+    </article>
+  </template>
+
+  <template id="tpl-slot">
+    <li class="slot">
+      <span class="slot-time" data-f="time"></span>
+      <div class="slot-body">
+        <div class="slot-line">
+          <span class="tag" data-f="type"></span>
+          <p class="slot-title" data-f="title"></p>
+          <span class="dept" data-f="dept"></span>
+          <span class="now-pill" data-f="now" data-i18n="now" hidden></span>
+          <span class="custom-pill" data-f="custom" hidden></span>
+        </div>
+        <p class="slot-meta" data-f="meta"></p>
+      </div>
+      <div class="slot-actions">
+        <label class="check" data-f="check">
+          <input type="checkbox">
+          <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+        </label>
+        <button type="button" class="slot-edit" data-f="edit">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>
+        </button>
+      </div>
+    </li>
+  </template>
+
+  <template id="tpl-gap">
+    <li class="slot slot-gap">
+      <span class="slot-time" data-f="time"></span>
+      <p class="slot-gap-label"><span data-f="length"></span></p>
+    </li>
+  </template>
+
+  <template id="tpl-break">
+    <li class="slot slot-break">
+      <span class="slot-time" data-f="time"></span>
+      <span class="slot-break-label" data-f="label"></span>
+    </li>
+  </template>
+
+  <template id="tpl-empty-slot">
+    <li class="slot-empty" data-i18n="emptyDay"></li>
+  </template>
+
+  <template id="tpl-subject-card">
+    <details class="subject-card">
+      <summary class="subject-summary">
+        <span class="subject-heading">
+          <span class="subject-name" data-f="name"></span>
+          <span class="dept" data-f="dept"></span>
+        </span>
+        <span class="subject-percent" data-f="percent"></span>
+        <button type="button" class="grades-btn" data-f="grades" data-i18n-aria="gradesButton">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5 9-4.5zM7 11.3V16c0 1.7 2.2 3 5 3s5-1.3 5-3v-4.7M21 7.5V14"/></svg>
+        </button>
+        <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </summary>
+      <span class="progress-track"><span class="progress-fill" data-f="fill"></span></span>
+      <dl class="subject-stats">
+        <div><dt data-i18n="statCompleted"></dt><dd data-f="completed"></dd></div>
+        <div><dt data-i18n="statRemaining"></dt><dd data-f="remaining"></dd></div>
+        <div class="stat-backlog"><dt data-i18n="statBacklog"></dt><dd data-f="backlog"></dd></div>
+      </dl>
+      <ul class="subject-lectures" data-f="list"></ul>
+    </details>
+  </template>
+
+  <template id="tpl-subject-lecture">
+    <li class="subject-lecture">
+      <div class="subject-lecture-copy">
+        <span class="subject-lecture-title" data-f="title"></span>
+        <span class="subject-lecture-meta" data-f="meta"></span>
+      </div>
+      <span class="pill-upcoming" data-f="upcoming" data-i18n="upcoming" hidden></span>
+      <label class="check" data-f="check">
+        <input type="checkbox">
+        <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+      </label>
+    </li>
+  </template>
+
+  <template id="tpl-calendar-card">
+    <article class="calendar-card">
+      <h3 data-f="title"></h3>
+      <p class="calendar-meta" data-f="meta"></p>
+      <p class="calendar-note" data-f="note"></p>
+      <ol class="event-list" data-f="events"></ol>
+    </article>
+  </template>
+
+  <template id="tpl-event-row">
+    <li class="event-row">
+      <span class="event-when">
+        <span class="event-date" data-f="date"></span>
+        <span class="event-sub" data-f="weekday"></span>
+        <span class="event-sub" data-f="hijri"></span>
+      </span>
+      <span class="event-label" data-f="label"></span>
+    </li>
+  </template>
+
+  <template id="tpl-calendar-source">
+    <a class="calendar-source" target="_blank" rel="noopener noreferrer">
+      <span data-i18n="calendarSource"></span>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+    </a>
+  </template>
+
+  <template id="tpl-program-item">
+    <li class="program-item">
+      <strong data-f="title"></strong>
+      <span data-f="desc"></span>
+    </li>
+  </template>
+
+  <template id="tpl-subject-chip">
+    <span class="subject-chip" data-f="name"></span>
+  </template>
+</body>
+</html>
